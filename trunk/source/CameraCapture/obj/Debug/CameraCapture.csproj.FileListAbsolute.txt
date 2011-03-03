@@ -1,0 +1,15 @@
+C:\Program Files\emgucv 2.1.0.793\bin\Emgu.CV.License.txt
+C:\Program Files\emgucv 2.1.0.793\bin\CameraCapture.exe
+C:\Program Files\emgucv 2.1.0.793\bin\CameraCapture.pdb
+C:\Program Files\emgucv 2.1.0.793\Emgu.CV.Example\CameraCapture\obj\Debug\ResolveAssemblyReference.cache
+C:\Program Files\emgucv 2.1.0.793\Emgu.CV.Example\CameraCapture\obj\Debug\CameraCapture.CameraCapture.resources
+C:\Program Files\emgucv 2.1.0.793\Emgu.CV.Example\CameraCapture\obj\Debug\CameraCapture.csproj.GenerateResource.Cache
+C:\Program Files\emgucv 2.1.0.793\Emgu.CV.Example\CameraCapture\obj\Debug\CameraCapture.exe
+C:\Program Files\emgucv 2.1.0.793\Emgu.CV.Example\CameraCapture\obj\Debug\CameraCapture.pdb
+F:\THAO\VIR\VCR\Experiment Programs\CameraCapture\obj\Debug\CameraCapture.exe
+F:\THAO\VIR\VCR\Experiment Programs\CameraCapture\obj\Debug\CameraCapture.pdb
+F:\THAO\VIR\VCR\Experiment Programs\CameraCapture\obj\Debug\ResolveAssemblyReference.cache
+F:\THAO\VIR\VCR\Experiment Programs\CameraCapture\obj\Debug\CameraCapture.csproj.GenerateResource.Cache
+F:\THAO\VIR\VCR\bin\CameraCapture.exe
+F:\THAO\VIR\VCR\bin\CameraCapture.pdb
+F:\THAO\VIR\VCR\Experiment Programs\CameraCapture\obj\Debug\CameraCapture.CameraCapture.resources
