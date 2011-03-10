@@ -62,7 +62,11 @@
       <DependentUpon>CameraCapture.cs</DependentUpon>
     </Compile>
     <Compile Include="CannyEdgeDetector.cs" />
-    <Compile Include="ExtractCandicateTextBlock.cs" />
+    <Compile Include="ClassifyTextLines.cs" />
+    <Compile Include="DerivativeImage.cs" />
+    <Compile Include="DetermineCandicateTextBlock.cs" />
+    <Compile Include="DetermineIndividualTextLines.cs" />
+    <Compile Include="OtsuThreshold.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Utilities.cs" />
@@ -73,6 +77,9 @@
   </ItemGroup>
   <ItemGroup>
     <Service Include="{B4F97281-0DBD-4835-9ED8-7DFB966E87FF}" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="ClassDiagram1.cd" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

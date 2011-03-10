@@ -13,3 +13,10 @@ F:\THAO\VIR\VCR\Experiment Programs\CameraCapture\obj\Debug\CameraCapture.csproj
 F:\THAO\VIR\VCR\bin\CameraCapture.exe
 F:\THAO\VIR\VCR\bin\CameraCapture.pdb
 F:\THAO\VIR\VCR\Experiment Programs\CameraCapture\obj\Debug\CameraCapture.CameraCapture.resources
+F:\THAO\VIR\VCR\ex-ocr-video\source\CameraCapture\obj\Debug\CameraCapture.exe
+F:\THAO\VIR\VCR\ex-ocr-video\source\CameraCapture\obj\Debug\CameraCapture.pdb
+F:\THAO\VIR\VCR\ex-ocr-video\source\CameraCapture\obj\Debug\ResolveAssemblyReference.cache
+F:\THAO\VIR\VCR\ex-ocr-video\source\CameraCapture\obj\Debug\CameraCapture.CameraCapture.resources
+F:\THAO\VIR\VCR\ex-ocr-video\source\CameraCapture\obj\Debug\CameraCapture.csproj.GenerateResource.Cache
+F:\THAO\VIR\VCR\ex-ocr-video\bin\CameraCapture.exe
+F:\THAO\VIR\VCR\ex-ocr-video\bin\CameraCapture.pdb
