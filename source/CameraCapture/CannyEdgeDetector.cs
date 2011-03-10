@@ -8,83 +8,105 @@ using Emgu.CV;
 using Emgu.CV.Structure;
 using Emgu.CV.CvEnum;
 
-
-enum DirectionType
-{
-    Horizontal = 0,
-    Vertical = 1
-}
-
 namespace CameraCapture
 {
     class CannyEdgeDetector
     {
-        public static int width;
-        public static int height;
-        public static Image<Bgr, Byte> inputImage = null;
-        public static Image<Gray, Byte> grayscaleImage = null;
-        public static Image<Gray, Byte> smoothGaussianImage = null;
-        public static int[,] data;
-        public static float[,] horizontalGradient = null;
-        public static float[,] verticalGradient;
-        //public static Image<Gray, float> gradientImage = null;
-        public static float[,] horizontalEdge;
-        public static float[,] verticalEdge;
+        private int width;
+        private int height;
 
-        public static float[,] nonmaxHorizontalGradient;
-        public static float[,] nonmaxVerticalGradient;
+        private int[,] data;
 
-        public static float lowThresh, highThresh;
-
-        //public static float[,] directionMatrix;
-        private static float[,] horizontalMask = new float[3, 3]{
-            {-1, 0, 1}, {-2, 0, 2}, {-1, 0, 1}};
-        private static float[,] verticalMask = new float[3, 3] {
-            {1, 2, 1}, {0, 0, 0}, {-1, -2, -1}};
-
-        // this is the Gaussian mask which correspond to the Gaussian function with sigma = 1.4f;
-        public static int size;
-
-        public static void SetInputInfo(Image<Bgr, Byte> source, int s, float low, float high)
+        public int[,] Data
         {
-            if (source != null)
-            {
-                width = source.Width;
-                height = source.Height;
-                inputImage = source;
-                size = s;
-                lowThresh = low;
-                highThresh = high;
-                grayscaleImage = inputImage.Convert<Gray, Byte>();
-            }
+            get { return data; }
+        }
+        private float[,] horizontalGradient;
+        private float[,] verticalGradient;
 
+        
+        private float[,] nonmaxHorizontalGradient;
+        private float[,] nonmaxVerticalGradient;
+
+        private float[,] horizontalEdge;
+
+        public float[,] HorizontalEdge
+        {
+            get { return horizontalEdge; }
+        }
+        private float[,] verticalEdge;
+
+        public float[,] VerticalEdge
+        {
+            get { return verticalEdge; }
         }
 
-        // perform the Canny Edge Detector
-        // 1. smooth the Image with Gausian distribution
-        // 2. calculat the gradient in the horizontal/vertical direction
-        // 3. non-maximum suppression is used to trace along the edge in the edge direction and suppress any pixel value 
-        // 4. perform segmentation with two thresholds (lowThresh, highThresh)
+        private float lowThresh, highThresh;
+        private int sizeofGaussianKernel;
 
-        public static void Canny()
+
+        // define two Soble mask
+        // the mask to detect Vertical Edges
+        private float[,] horizontalMask = new float[3, 3]{
+            {-1, 0, 1}, {-2, 0, 2}, {-1, 0, 1}};
+        // the mask to detect Horizontal Edge
+        private float[,] verticalMask = new float[3, 3] {
+            {1, 2, 1}, {0, 0, 0}, {-1, -2, -1}};
+
+        /// <summary>
+        /// Perform the Canny edge detector
+        /// </summary>
+        /// <remarks>
+        /// Input: 
+        /// - color input image
+        /// - Size of Gaussian kernel which support the Smooth Gaussian operation
+        /// - lowThreshold: to link the weak edge points to the strong edge points 
+        /// - high Threshold: to determine the strong edge points in input image
+        /// Describe the main steps in Canny edge detector
+        /// 1. smooth the Image with Gausian distribution
+        /// 2. calculate the gradient in the horizontal/vertical direction
+        /// 3. non-maximum suppression is used to trace along the edge in the edge direction and suppress any pixel value 
+        /// 4. perform segmentation with two thresholds (lowThresh, highThresh)
+        /// </remarks>
+        public void Canny(Image<Bgr, byte> img, int sizeofGaussianKernel, float lowThresh, float highThresh)
         {
+            this.lowThresh = lowThresh;
+            this.highThresh = highThresh;
+            this.sizeofGaussianKernel = sizeofGaussianKernel;
+            height = img.Height;
+            width = img.Width;
+
+            // convert input image to grayscale input
+            Image<Gray, byte> grayscale = img.Convert<Gray, byte>();
             // smooth the image with the Gaussian Mask, to reduce the noise
-            smoothGaussianImage = grayscaleImage.SmoothGaussian(size);
-            ReadImage();
+            Image<Gray,byte> smoothGaussianImage = grayscale.SmoothGaussian(sizeofGaussianKernel);
+
+            // get image data under array 2d
+            this.data = Utilities.ConvertImageToArray2D(smoothGaussianImage);
+
+            
             ComputeGradient();
             NonMaximaSuppression();
             PerformHysteresis();
         }
 
-        public static Image<Gray, byte> GetHorizontalEdge()
+        /// <summary>
+        /// Get the horizontal edge image
+        /// </summary>
+        /// <returns>Grayscale image contain the horizontal edges</returns>
+        public Image<Gray, byte> GetHorizontalEdgeImage()
         {
-            Image<Gray,float> temp = DisplayImage(verticalEdge);
+            Image<Gray,float> temp = Utilities.CreateImageFromArray2D(horizontalEdge);
             return temp.Convert<Gray, byte>();           
         }
 
-        public static Image<Gray, byte> GetVerticalEdge()
+        /// <summary>
+        /// Get the vertical edge image
+        /// </summary>
+        /// <returns>Grayscale image contains the horizontal edges</returns>
+        public Image<Gray, byte> GetVerticalEdgeImage()
         {
-            Image<Gray, float> temp = DisplayImage(horizontalEdge);
+            Image<Gray, float> temp = Utilities.CreateImageFromArray2D(verticalEdge);           
             return temp.Convert<Gray, byte>();
         }
 
@@ -92,7 +114,10 @@ namespace CameraCapture
         // Compute the gradient in the horizontal and vertical direction by using the Sobel operator
         // and find the magnitude (EDGE STRENGTH) of gradient
         // Besides that, set the direction for each point
-        public static void ComputeGradient()
+        /// <summary>
+        /// Compute gradient at each pixel in the vertical/horizontal direction
+        /// </summary>
+        private void ComputeGradient()
         {
             horizontalGradient = new float[height, width];
             verticalGradient = new float[height, width];
@@ -102,6 +127,8 @@ namespace CameraCapture
             for(i=1; i<height-1; i++)
                 for (j = 1; j < width-1; j++)
                 {
+
+                    // to calculate the gradient in the vertical direction
                     sum1 = data[i - 1, j - 1] * horizontalMask[0, 0]
                         + data[i - 1, j] * horizontalMask[0, 1]
                         + data[i - 1, j + 1] * horizontalMask[0, 2]
@@ -113,7 +140,7 @@ namespace CameraCapture
                         + data[i + 1, j - 1] * horizontalMask[2, 0]
                         + data[i + 1, j] * horizontalMask[2, 1]
                         + data[i + 1, j + 1] * horizontalMask[2, 2];
-
+                    // to calculate the gradient in the horizontal direction
                     sum2 = data[i - 1, j - 1] * verticalMask[0, 0]
                         + data[i - 1, j] * verticalMask[0, 1]
                         + data[i - 1, j + 1] * verticalMask[0, 2]
@@ -126,59 +153,17 @@ namespace CameraCapture
                         + data[i + 1, j] * verticalMask[2, 1]
                         + data[i + 1, j + 1] * verticalMask[2, 2];
 
-                    horizontalGradient[i, j] = sum1;
-                    verticalGradient[i, j] = sum2; 
+                    horizontalGradient[i, j] = sum2;
+                    verticalGradient[i, j] = sum1; 
                 }            
         }
-
         
-        public static Image<Gray,float> DisplayImage(float [,]data)
-        {
-            float[, ,] temp = new float[height, width, 1];
-            int i, j;
-            for(i=0; i<height; i++)
-                for (j = 0; j < width; j++)
-                {
-                    temp[i, j, 0] = data[i, j];
-                }
-            return new Image<Gray, float>(temp);
-        }
-
-        // get data from smoothGaussianImage
-        private static void ReadImage()
-        {
-            int i, j;
-            data = new int[height, width];  //[Row,Column]
-            // convert smoothGaussianImage into Bitmap
-            Bitmap image = smoothGaussianImage.ToBitmap();
-            BitmapData bitmapData1 = image.LockBits(new Rectangle(0, 0, width, height),
-                                     ImageLockMode.ReadOnly, PixelFormat.Format32bppArgb);
-            unsafe
-            {
-                byte* imagePointer1 = (byte*)bitmapData1.Scan0;
-
-                for (i = 0; i < height; i++)
-                {
-                    for (j = 0; j < width; j++)
-                    {
-                        data[i, j] = (int)((imagePointer1[0] + imagePointer1[1] + imagePointer1[2]) / 3.0);
-                        //4 bytes per pixel
-                        imagePointer1 += 4;
-                    }//end for j
-                    //4 bytes per pixel
-                    imagePointer1 += bitmapData1.Stride - (bitmapData1.Width * 4);
-                }//end for i
-            }//end unsafe
-            image.UnlockBits(bitmapData1);
-
-        }
-
-
-        public static void NonMaximaSuppression()
+        private void NonMaximaSuppression()
         {
 
             nonmaxHorizontalGradient = new float[height, width];
             nonmaxVerticalGradient = new float[height, width];
+
             int i, j;
             for(i = 0; i<height; i++)
                 for (j = 0; j < width; j++)
@@ -187,10 +172,8 @@ namespace CameraCapture
                     nonmaxVerticalGradient[i, j] = Math.Abs(verticalGradient[i, j]);
                 }
 
-            
-            
-            int Limit = size / 2;            
-             float Tangent;
+            int Limit = sizeofGaussianKernel / 2;            
+            float Tangent;
             
              for (i = Limit; i < height - Limit; i++)
              {
@@ -262,9 +245,7 @@ namespace CameraCapture
             
         }
 
-        
-        
-        public static void PerformHysteresis()
+        private void PerformHysteresis()
         {
             horizontalEdge = new float[height, width];
             verticalEdge = new float[height, width];
@@ -279,7 +260,7 @@ namespace CameraCapture
         }
 
         // perform hysteris in the horizontal direction
-        public static void PerformHystersisHorizontal()
+        private void PerformHystersisHorizontal()
         {
             for (int x = 0; x < height; x++)
             {
@@ -287,14 +268,14 @@ namespace CameraCapture
                 {
                     if (horizontalEdge[x, y] == 0 && nonmaxHorizontalGradient[x, y] >= highThresh)
                     {
-                        followHorizontal(x, y, lowThresh);
+                        FollowHorizontal(x, y, lowThresh);
                     }
                 }
             }
         }
 
         // perform hysteris in the vertical direction
-        public static void PerformHystersisVertical()
+        private void PerformHystersisVertical()
         {
             for (int x = 0; x < height; x++)
             {
@@ -302,14 +283,13 @@ namespace CameraCapture
                 {
                     if (verticalEdge[x, y] == 0 && nonmaxVerticalGradient[x, y] >= highThresh)
                     {
-                        followVertical(x, y, lowThresh);
+                        FollowVertical(x, y, lowThresh);
                     }
                 }
             }
         }
 
-
-        private static void followHorizontal(int x1, int y1, float threshold)
+        private void FollowHorizontal(int x1, int y1, float threshold)
         {
 
             int x0 = x1 == 0 ? x1 : x1 - 1;
@@ -330,13 +310,13 @@ namespace CameraCapture
                         && horizontalEdge[x, y]== 0
                         && nonmaxHorizontalGradient[x, y]>= threshold)
                     {
-                        followHorizontal(x, y, threshold);
+                        FollowHorizontal(x, y, threshold);
                     }
                 }
             }
         }
 
-        private static void followVertical(int x1, int y1, float threshold)
+        private void FollowVertical(int x1, int y1, float threshold)
         {
 
             int x0 = x1 == 0 ? x1 : x1 - 1;
@@ -358,10 +338,11 @@ namespace CameraCapture
                         && verticalEdge[x, y]== 0
                         && nonmaxVerticalGradient[x, y]>= threshold)
                     {
-                        followVertical(x, y, threshold);
+                        FollowVertical(x, y, threshold);
                     }
                 }
             }
         }
+        
     }
 }
