@@ -55,6 +55,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="CalculateMotionVector.cs" />
     <Compile Include="CameraCapture.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -62,13 +63,18 @@
       <DependentUpon>CameraCapture.cs</DependentUpon>
     </Compile>
     <Compile Include="CannyEdgeDetector.cs" />
+    <Compile Include="DynamicDescriber.cs" />
     <Compile Include="ClassifyTextLines.cs" />
+    <Compile Include="ConcatenateTwoImage.cs" />
     <Compile Include="DerivativeImage.cs" />
     <Compile Include="DetermineCandicateTextBlock.cs" />
     <Compile Include="DetermineIndividualTextLines.cs" />
+    <Compile Include="MotionVector.cs" />
     <Compile Include="OtsuThreshold.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="RefineDynamicTextBlocks.cs" />
+    <Compile Include="TrackDynamicTextBlock.cs" />
     <Compile Include="Utilities.cs" />
     <EmbeddedResource Include="CameraCapture.resx">
       <SubType>Designer</SubType>
