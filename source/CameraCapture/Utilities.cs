@@ -10,7 +10,7 @@ using Emgu.CV.CvEnum;
 
 
 namespace CameraCapture
-{    
+{
     public class Utilities
     {
         /// <summary>
@@ -46,7 +46,7 @@ namespace CameraCapture
             int height, width;
             height = img.Height; width = img.Width;
 
-            int [,] data = new int[height, width];
+            int[,] data = new int[height, width];
             int i, j;
             Bitmap image = img.Bitmap;
             BitmapData bitmapData1 = image.LockBits(new Rectangle(0, 0, width, height),
@@ -77,14 +77,14 @@ namespace CameraCapture
             return ConvertImageToArray2D(gray);
         }
 
-        
+
 
         /// <summary>
         /// Export the images in the list into the image file
         /// </summary>
         public static void ExportImageListUnderFile(string dir, List<Image<Bgr, byte>> imageList)
         {
-            int count = 1;
+
             foreach (Image<Bgr, byte> img in imageList)
             {
                 string filename = dir + count.ToString() + ".jpg";
@@ -93,9 +93,10 @@ namespace CameraCapture
             }
         }
 
+        public static int count = 1;
         public static void ExportImageListUnderFile(string dir, List<Image<Gray, byte>> imageList)
         {
-            int count = 1;
+
             foreach (Image<Gray, byte> img in imageList)
             {
                 string filename = dir + count.ToString() + ".jpg";
@@ -103,9 +104,9 @@ namespace CameraCapture
                 count++;
             }
         }
-        
 
-        public static List<Image<Bgr, byte>> CreateImageListsFromROIList(Image<Bgr, byte> img, List<Rectangle> roiList )
+
+        public static List<Image<Bgr, byte>> CreateImageListsFromROIList(Image<Bgr, byte> img, List<Rectangle> roiList)
         {
             List<Image<Bgr, byte>> imageList = new List<Image<Bgr, byte>>();
             foreach (Rectangle rect in roiList)
@@ -142,12 +143,12 @@ namespace CameraCapture
             Rectangle originalROI = blackImage.ROI;
             for (int i = 0; i < textImageList.Count; i++)
             {
-                Image<Gray,  byte> image = textImageList[i];
+                Image<Gray, byte> image = textImageList[i];
                 Rectangle region = textRegionList[i];
                 // set ROI on the image
                 // place image on the selected ROI
                 blackImage.ROI = region;
-                image.CopyTo(blackImage);             
+                image.CopyTo(blackImage);
                 blackImage.ROI = Rectangle.Empty;
             }
             return blackImage;
@@ -168,6 +169,54 @@ namespace CameraCapture
                 colorImage.ROI = Rectangle.Empty;
             }
             return colorImage;
+        }
+
+        /// <summary>
+        /// Create a larger image from the sub-images list
+        /// </summary>
+        /// <remarks>
+        /// Input:
+        ///    - sub-images list
+        /// Output
+        ///    - concatenated image
+        /// </remarks>
+        public static Image<Gray, byte> ConcatenateSubImages(List<Image<Gray, byte>> subImageList)
+        {
+            int noSubImage, width, height;
+            noSubImage = subImageList.Count;
+            Image<Gray, byte> concatenatedImage = null;
+            if (noSubImage > 0)
+            {
+                width = subImageList[0].Width; height = subImageList[0].Height;
+                concatenatedImage = new Image<Gray, byte>(width * noSubImage, height);
+                for (int i = 0; i < noSubImage; i++)
+                {
+                    Rectangle roi = new Rectangle(new Point(i * width, 0), new Size(width, height));
+                    concatenatedImage.ROI = roi;
+                    subImageList[i].CopyTo(concatenatedImage);
+                    concatenatedImage.ROI = Rectangle.Empty;
+                }
+            }
+
+            return concatenatedImage;
+        }
+
+        /// <summary>
+        /// The same as concatenating sub-images, but concatenate on sub-regions
+        /// </summary>
+        public static Rectangle ConcatenateSubRegion(List<Rectangle> subRegion)
+        {
+            int noSubRegion, width, height, X, Y;
+            noSubRegion = subRegion.Count;
+            Rectangle region = Rectangle.Empty;
+            if (noSubRegion > 0)
+            {
+                width = subRegion[0].Width; height = subRegion[0].Height;
+                X = subRegion[0].X; Y = subRegion[0].Y;
+                region = new Rectangle(new Point(X, Y), new Size(width*noSubRegion, height));
+            }
+            return region;
+
         }
 
     }
