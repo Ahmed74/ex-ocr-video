@@ -23,18 +23,16 @@ namespace CameraCapture
     {
 
         // define two structure elements for the Dilate operation on both horziontal and vertical edge image
-        public int[] verticalStructElement = new int[9] { 1, 1, 1, 1, 1, 1, 1, 1, 1 };
+        public int[] verticalStructElement = new int[5] { 1, 1, 1, 1, 1 };
 
-        public int[,] horizontalStructElement = new int[9,4] {
-            { 1, 1, 1, 1},
-            { 1, 1, 1, 1},
-            { 1, 1, 1, 1},
-            { 1, 1, 1, 1},
-            { 1, 1, 1, 1},
-            { 1, 1, 1, 1},
-            { 1, 1, 1, 1},
-            { 1, 1, 1, 1},
-            { 1, 1, 1, 1},
+        public int[,] horizontalStructElement = new int[7,3] {
+            { 1, 1, 1},
+            { 1, 1, 1},
+            { 1, 1, 1},
+            { 1, 1, 1},
+            { 1, 1, 1},
+            { 1, 1, 1},
+            { 1, 1, 1}            
         };
 
         private float[,] dilateHorizontalEdge;
@@ -173,6 +171,7 @@ namespace CameraCapture
         /// <remarks>Set these blocks and their corresponding region into two lists</remarks>
         public void ExtractCandicateTextBlocks()
         {
+
             candicateTextBlocksImagesList = new List<Image<Gray, byte>>();
             candicateTextRegionList = new List<Rectangle>();
 

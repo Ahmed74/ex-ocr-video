@@ -53,10 +53,10 @@ namespace CameraCapture
             gradientOrientation = new float[height, width];
 
             int[,] Data = Utilities.ConvertImageToArray2D(img);
-
+            
             gradX = Differentiate(Data, kernelX);
             gradY = Differentiate(Data, kernelY);
-
+            
             //Compute the gradient magnitude based on derivatives in x and y:
             int i, j;
             for (i = 0; i < height; i++)
@@ -67,6 +67,7 @@ namespace CameraCapture
                     gradientOrientation[i, j] = (float)(Math.Atan(gradY[i, j] / gradX[i, j]) * 180 / Math.PI); //rad to degree
                 }
             }
+            
         }
 
         public float[,] Differentiate (int[,] Data, int[,] Filter)

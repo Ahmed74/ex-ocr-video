@@ -37,18 +37,18 @@ namespace CameraCapture
             get { return motionVector; }
             set { motionVector = value; }
         }
-        int xCenter, yCenter;  // the center 
+        int x, y;  // the center 
 
-        public int YCenter
+        public int Y
         {
-            get { return yCenter; }
-            set { yCenter = value; }
+            get { return y; }
+            set { y = value; }
         }
 
-        public int XCenter
+        public int X
         {
-            get { return xCenter; }
-            set { xCenter = value; }
+            get { return x; }
+            set { x = value; }
         }
         
     }

@@ -16,7 +16,7 @@ namespace CameraCapture
     /// <remarks>
     /// In this class, we will get 
     /// Input: 
-    /// 1. three consecutive frames (previousFrame, currentFrame, nextFrame)
+    /// 1. three consecutive frames (previous, current, next)
     /// 2. list of textRegion lines on the current frame
     /// 3. list of textRegion region on the current frame
     /// Output: 
@@ -25,27 +25,7 @@ namespace CameraCapture
     /// </remarks>
     public class ClassifyTextLines
     {
-        private Image<Bgr, byte> previousFrame;
-
-        public Image<Bgr, byte> PreviousFrame
-        {
-            get { return previousFrame; }
-            set { previousFrame = value; }
-        }
-        private Image<Bgr, byte> currentFrame;
-
-        public Image<Bgr, byte> CurrentFrame
-        {
-            get { return currentFrame; }
-            set { currentFrame = value; }
-        }
-        private Image<Bgr, byte> nextFrame;
-
-        public Image<Bgr, byte> NextFrame
-        {
-            get { return nextFrame; }
-            set { nextFrame = value; }
-        }
+        
         private List<Rectangle> staticTextRegionList;
 
         public List<Rectangle> StaticTextRegionList
@@ -61,15 +41,13 @@ namespace CameraCapture
             set { dynamicTextRegionList = value; }
         }
 
-        private List<Image<Gray, byte>> staticTextImageList;
-        private List<Image<Gray, byte>> dynamicTextImageList;
-
-        public bool CheckColorConsistencyOnColorImage(Rectangle textRegion, Image<Gray, byte> resultTextRegion, int threshEpsilon)
+        public bool CheckColorConsistencyOnColorImage(Image<Bgr, byte> previous, Image<Bgr, byte> current, Image<Bgr, byte> next,
+            Rectangle textRegion, Image<Gray, byte> resultTextRegion, int threshEpsilon)
         {
             Image<Bgr, byte> prevTextImage, curTextImage, nextTextImage;
-            prevTextImage = previousFrame.Copy(textRegion);
-            curTextImage = currentFrame.Copy(textRegion);
-            nextTextImage = nextFrame.Copy(textRegion);
+            prevTextImage = previous.Copy(textRegion);
+            curTextImage = current.Copy(textRegion);
+            nextTextImage = next.Copy(textRegion);
 
             // split color image into three color channel
             Image<Gray,byte> [] prevTextChannelImages = prevTextImage.Split();
@@ -132,17 +110,15 @@ namespace CameraCapture
             return true;
         }
 
-        public bool CheckColorConsistencyOnGrayImage(Rectangle textRegion, Image<Gray, byte> resultTextRegion, int threshEpsilon)
+        public bool CheckColorConsistencyOnGrayImage( Image<Gray, byte> previous, Image<Gray, byte> current, Image<Gray, byte> next,
+            Rectangle textRegion, Image<Gray, byte> resultTextRegion, int threshEpsilon)
         {
-            Image<Bgr, byte> prevTextImage, curTextImage, nextTextImage;
-            prevTextImage = previousFrame.Copy(textRegion);
-            curTextImage = currentFrame.Copy(textRegion);
-            nextTextImage = nextFrame.Copy(textRegion);
+            Image<Gray, byte> prevGrayImage, curGrayImage, nextGrayImage;
+            prevGrayImage = previous.Copy(textRegion);
+            curGrayImage = current.Copy(textRegion);
+            nextGrayImage = next.Copy(textRegion);
 
-            // convert them into grayscale images
-            Image<Gray, byte> prevGrayImage = prevTextImage.Convert<Gray, byte>();
-            Image<Gray, byte> curGrayImage = curTextImage.Convert<Gray, byte>();
-            Image<Gray, byte> nextGrayImage = nextTextImage.Convert<Gray, byte>();
+            
             
             OtsuThreshold otsuThresh = new OtsuThreshold();
             int prevThreshold, curThreshold, nextThreshold;
@@ -181,60 +157,57 @@ namespace CameraCapture
 
         // use Kim's method
         // its drawback: will fail when the background changes.
-        public bool CheckColorConsistencyOnGrayImageKim(Rectangle textRegion, Image<Gray, byte> resultTextRegion, float threshEpsilon)
+        public bool CheckColorConsistencyOnGrayImageKim(Image<Gray, byte> previous, Image<Gray, byte> current, Image<Gray, byte> next,
+            Rectangle textRegion, Image<Gray, byte> resultTextRegion, float threshEpsilon)
         {
+
+            Image<Gray, byte> prevGrayImage, curGrayImage, nextGrayImage;
+            prevGrayImage = previous.Copy(textRegion);
+            curGrayImage = current.Copy(textRegion);
+            nextGrayImage = next.Copy(textRegion);
             
-            Image<Bgr, byte> prevTextImage, curTextImage, nextTextImage;
-            prevTextImage = previousFrame.Copy(textRegion);
-            curTextImage = currentFrame.Copy(textRegion);
-            nextTextImage = nextFrame.Copy(textRegion);
+            // set the same ROI for each image (previous, current, next)
+            previous.ROI = textRegion;
+            current.ROI = textRegion;
+            next.ROI = textRegion;
 
-            // convert them into grayscale images
-            Image<Gray, byte> prevGrayImage = prevTextImage.Convert<Gray, byte>().SmoothGaussian(5);
-            Image<Gray, byte> curGrayImage = curTextImage.Convert<Gray, byte>().SmoothGaussian(5);
-            Image<Gray, byte> nextGrayImage = nextTextImage.Convert<Gray, byte>().SmoothGaussian(5);
+            Image<Gray, byte> diff1, diff2; // diff1 = |current-previous|; diff2 = |current-next|;
+            diff1 = current.AbsDiff(previous).ThresholdBinaryInv(new Gray(10), new Gray(255));
+            diff2 = current.AbsDiff(next).ThresholdBinaryInv(new Gray(10), new Gray(255));
 
-            int[,] prevData, curData, nextData;
-            prevData = Utilities.ConvertImageToArray2D(prevGrayImage);
-            curData = Utilities.ConvertImageToArray2D(curGrayImage);
-            nextData = Utilities.ConvertImageToArray2D(nextGrayImage);
 
-            int height, width, i, j;
-            
-            int count =0;
-            height = textRegion.Height; width = textRegion.Width;
-            for (i = 0; i < height; i++)
-                for (j = 0; j < width; j++)
-                {
-                    if (Math.Abs(prevData[i, j] - curData[i, j]) < threshEpsilon
-                        && Math.Abs(prevData[i, j] - nextData[i, j]) < threshEpsilon)
-                    {
-                        count++;
-                    }
-                }
+            //diff1.ThresholdBinaryInv(new Gray(20), new Gray(255));
+            //diff2.ThresholdBinaryInv(new Gray(20), new Gray(255));
+
+            Image<Gray, byte> diff = diff1.And(diff2);
+            int count = diff.CountNonzero()[0];
+            int height, width;
+            height = textRegion.Height; width = textRegion.Width;            
 
             bool isColorConsitency = true;
-            if (count * 1.0F / (height * width) < threshEpsilon)
+            float ratio = count * 1.0F / (height * width);
+            if (ratio < threshEpsilon)
             {
                 isColorConsitency = false;
             }
+            // reset ROI 
+            previous.ROI = Rectangle.Empty;
+            current.ROI = Rectangle.Empty;
+            next.ROI = Rectangle.Empty;
+
 
             return isColorConsitency;
         }
 
 
-        public bool CheckOrientationConsistencyOnGrayImage(Rectangle textRegion,  
-            float gradVariance, float orientVariance, float variance)
+        public bool CheckOrientationConsistencyOnGrayImage(Image<Gray, byte> previous, Image<Gray, byte> current, Image<Gray, byte> next,
+            Rectangle textRegion,  float gradVariance, float orientVariance, float variance)
         {
-            Image<Bgr, byte> prevTextImage, curTextImage, nextTextImage;
-            prevTextImage = previousFrame.Copy(textRegion);
-            curTextImage = currentFrame.Copy(textRegion);
-            nextTextImage = nextFrame.Copy(textRegion);
+            Image<Gray, byte> prevGrayImage, curGrayImage, nextGrayImage;
+            prevGrayImage = previous.Copy(textRegion);
+            curGrayImage = current.Copy(textRegion);
+            nextGrayImage = next.Copy(textRegion);
 
-            // convert them into grayscale images
-            Image<Gray, byte> prevGrayImage = prevTextImage.Convert<Gray, byte>().SmoothGaussian(5);
-            Image<Gray, byte> curGrayImage = curTextImage.Convert<Gray, byte>().SmoothGaussian(5);
-            Image<Gray, byte> nextGrayImage = nextTextImage.Convert<Gray, byte>().SmoothGaussian(5);
 
             // calculate the gradient, its direction on each pixel in images (prevTextImage, curTextImage, nextTextImage)
             DerivativeImage derivativeImage = new DerivativeImage();
@@ -290,19 +263,15 @@ namespace CameraCapture
             return isOrientationConsistency;
         }
 
-        public bool CheckOrientationConsistencyOnGrayImageLiu(Rectangle textRegion, float threshold)
+        public bool CheckOrientationConsistencyOnGrayImageLiu(Image<Gray, byte> previous, Image<Gray, byte> current, Image<Gray, byte> next,
+            Rectangle textRegion, float threshold)
         {
-            Image<Bgr, byte> prevTextImage, curTextImage, nextTextImage;
-            prevTextImage = previousFrame.Copy(textRegion);
-            curTextImage = currentFrame.Copy(textRegion);
-            nextTextImage = nextFrame.Copy(textRegion);
+            Image<Gray, byte> prevGrayImage, curGrayImage, nextGrayImage;
+            prevGrayImage = previous.Copy(textRegion);
+            curGrayImage = current.Copy(textRegion);
+            nextGrayImage = next.Copy(textRegion);
 
-            // convert them into grayscale images
-            Image<Gray, byte> prevGrayImage = prevTextImage.Convert<Gray, byte>().SmoothGaussian(5);
-            Image<Gray, byte> curGrayImage = curTextImage.Convert<Gray, byte>().SmoothGaussian(5);
-            Image<Gray, byte> nextGrayImage = nextTextImage.Convert<Gray, byte>().SmoothGaussian(5);
-
-            
+                        
             // calculate the gradient, its direction on each pixel in images (prevTextImage, curTextImage, nextTextImage)
             DerivativeImage derivativeImage = new DerivativeImage();
 
@@ -341,40 +310,56 @@ namespace CameraCapture
             return isOrientationConsistency;
         }
 
-        public void ClassfifyTextLines(List<Image<Gray,byte>> textImageList, List<Rectangle> textRegionList, float threshEpsilon,
+        public void ClassfifyTextLines(Image<Gray, byte> previous, Image<Gray, byte> current, Image<Gray, byte> next,
+            List<Image<Gray,byte>> textImageList, List<Rectangle> textRegionList, float threshEpsilon,
             float gradVariance, float orientVariance, float variance)
         {
             staticTextRegionList = new List<Rectangle>();
             dynamicTextRegionList = new List<Rectangle>();
-            staticTextImageList = new List<Image<Gray, byte>>();
-            dynamicTextImageList = new List<Image<Gray, byte>>();
-
 
             for (int i=0; i< textRegionList.Count; i++)
             {
-                Rectangle region = textRegionList[i];
+                
+                int widthRegion = textRegionList[i].Width;
+                int heightRegion = textRegionList[i].Height;
+                Point location = textRegionList[i].Location;
+                int div, mod ;
 
-                if (CheckColorConsistencyOnGrayImageKim(region, null, threshEpsilon) &&
-                     CheckOrientationConsistencyOnGrayImage(region, gradVariance, orientVariance, variance))
-                {
-                    staticTextRegionList.Add(region);
-                    //staticTextImageList.Add(textImageList[i]);
-                }
+                div = widthRegion / 15; mod = widthRegion % 15;
+                if (mod > 8 & ((textRegionList[i].X + 15 * (div + 1)) < previous.Width))
+                    widthRegion = 15 * (div + 1);
                 else
+                    widthRegion = 15 * div;
+                if (heightRegion % 2 == 0)
                 {
-                    dynamicTextRegionList.Add(region);
-                    //dynamicTextImageList.Add(textImageList[i]);
+                    heightRegion = heightRegion - 1;
+                    location.Y++;
+                    
+                }
+
+                Rectangle region = new Rectangle(location, new Size(widthRegion, heightRegion));
+
+                if (widthRegion >= 15)
+                {
+                    //Rectangle region = textRegionList[i];
+                    if (CheckColorConsistencyOnGrayImageKim(previous, current, next, region, null, threshEpsilon)
+                       && CheckOrientationConsistencyOnGrayImage(previous, current, next, region, gradVariance, orientVariance, variance))
+                    {
+                        staticTextRegionList.Add(region);
+                    }
+                    else
+                    {
+                        dynamicTextRegionList.Add(region);
+                    }
                 }
             }
         }
 
+        /*
         public void ClassfifyTextLines(List<Image<Gray, byte>> textImageList, List<Rectangle> textRegionList, float thresh)
         {
             staticTextRegionList = new List<Rectangle>();
             dynamicTextRegionList = new List<Rectangle>();
-            staticTextImageList = new List<Image<Gray, byte>>();
-            dynamicTextImageList = new List<Image<Gray, byte>>();
-
 
             for (int i = 0; i < textRegionList.Count; i++)
             {
@@ -382,26 +367,25 @@ namespace CameraCapture
 
                 
                 if (//CheckColorConsistencyOnGrayImageKim(region, null, threshEpsilon) &&
-                     CheckOrientationConsistencyOnGrayImageLiu(region, thresh))
+                     CheckOrientationConsistencyOnGrayImageLiu(previous, current, next, region, thresh))
                 {
                     staticTextRegionList.Add(region);
-                    staticTextImageList.Add(textImageList[i]);
                 }
                 else
                 {
                     dynamicTextRegionList.Add(region);
-                    dynamicTextImageList.Add(textImageList[i]);
                 }
             }
         }
+        */
 
-        public List<Image<Gray, byte>> BinarizeTextImageList(List<Rectangle> textRegionList)
+        public List<Image<Gray, byte>> BinarizeTextImageList(Image<Gray, byte> currentFrame, List<Rectangle> textRegionList)
         {
             /*
             Image<Bgr, byte> prevTextImage, curTextImage, nextTextImage;
-            prevTextImage = previousFrame.Copy(textRegion);
-            curTextImage = currentFrame.Copy(textRegion);
-            nextTextImage = nextFrame.Copy(textRegion);
+            prevTextImage = previous.Copy(textRegion);
+            curTextImage = current.Copy(textRegion);
+            nextTextImage = next.Copy(textRegion);
 
             // convert them into grayscale images
             Image<Gray, byte> prevGrayImage = prevTextImage.Convert<Gray, byte>().SmoothGaussian(5);
@@ -412,8 +396,7 @@ namespace CameraCapture
 
             for (int i = 0; i < textRegionList.Count; i++)
             {
-                Image<Bgr, byte> image = currentFrame.Copy(textRegionList[i]);
-                Image<Gray, byte> gray = image.Convert<Gray, byte>();
+                Image<Gray, byte> gray = currentFrame.Copy(textRegionList[i]);                 
                 Image<Gray, byte> binary = gray.CopyBlank();
                 CvInvoke.cvThreshold(gray, binary, 100F, 255F, THRESH.CV_THRESH_BINARY | THRESH.CV_THRESH_OTSU);
                 binaryImageList.Add(binary);
