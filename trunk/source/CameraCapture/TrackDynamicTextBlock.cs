@@ -42,6 +42,7 @@ namespace CameraCapture
         }
 
 
+       /*
         /// <summary>
         /// Initilize the dynamic text blocks for the tracking process
         /// </summary>
@@ -62,17 +63,18 @@ namespace CameraCapture
                         dynamicTextTracker.Periodicity = 0;
                         trackingDynamicTextList.Add(dynamicTextTracker);
                     }
-                    /*
+                    
                     else if (describer.MotionVector.Direction == Direction.Left&&
                         describer.XCenter > (int)(0.25F * width))
                     {
                         // insert it into trackingDynamicTextList
                     }
-                    */
+                    
                 }
             }
         }
 
+        
         /// <summary>
         /// Perform the tracking process
         /// </summary>
@@ -85,6 +87,7 @@ namespace CameraCapture
         /// Output:
         ///     - expand the content the old text block
         /// </remarks>
+        /// 
         public void TrackingDynamicTextProcess(List<DynamicTextDescriber> dynamicTextImageList, int width)
         {
             if (trackingDynamicTextList.Count == 0)
@@ -128,7 +131,7 @@ namespace CameraCapture
             ref StatusTracking status, int width)
         {
             bool isMatching = false;
-            if (Math.Abs((oldDescriber.YCenter - newDescriber.YCenter)) < 2                
+            if (Math.Abs((oldDescriber.Y - newDescriber.Y)) < 2                
                 && (oldDescriber.MotionVector.Direction == newDescriber.MotionVector.Direction)
                 && Math.Abs((oldDescriber.MotionVector.Magnitude - newDescriber.MotionVector.Magnitude)) < 2)
             {
@@ -188,7 +191,7 @@ namespace CameraCapture
             }
         }
 
-
+        */
 
 
     }

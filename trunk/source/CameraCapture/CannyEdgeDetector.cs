@@ -21,9 +21,9 @@ namespace CameraCapture
         {
             get { return data; }
         }
+
         private float[,] horizontalGradient;
         private float[,] verticalGradient;
-
         
         private float[,] nonmaxHorizontalGradient;
         private float[,] nonmaxVerticalGradient;
@@ -34,6 +34,7 @@ namespace CameraCapture
         {
             get { return horizontalEdge; }
         }
+
         private float[,] verticalEdge;
 
         public float[,] VerticalEdge
@@ -44,8 +45,7 @@ namespace CameraCapture
         private float lowThresh, highThresh;
         private int sizeofGaussianKernel;
 
-
-        // define two Soble mask
+        // define two Soble masks
         // the mask to detect Vertical Edges
         private float[,] horizontalMask = new float[3, 3]{
             {-1, 0, 1}, {-2, 0, 2}, {-1, 0, 1}};
@@ -68,7 +68,7 @@ namespace CameraCapture
         /// 3. non-maximum suppression is used to trace along the edge in the edge direction and suppress any pixel value 
         /// 4. perform segmentation with two thresholds (lowThresh, highThresh)
         /// </remarks>
-        public void Canny(Image<Bgr, byte> img, int sizeofGaussianKernel, float lowThresh, float highThresh)
+        public void Canny(Image<Gray, byte> img, int sizeofGaussianKernel, float lowThresh, float highThresh)
         {
             this.lowThresh = lowThresh;
             this.highThresh = highThresh;
@@ -77,7 +77,7 @@ namespace CameraCapture
             width = img.Width;
 
             // convert input image to grayscale input
-            Image<Gray, byte> grayscale = img.Convert<Gray, byte>();
+            Image<Gray, byte> grayscale = img; //img.Convert<Gray, byte>();
             // smooth the image with the Gaussian Mask, to reduce the noise
             Image<Gray,byte> smoothGaussianImage = grayscale.SmoothGaussian(sizeofGaussianKernel);
 

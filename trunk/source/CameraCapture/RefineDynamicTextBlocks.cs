@@ -30,7 +30,7 @@ namespace CameraCapture
             set { refinedDynamicImageList = value; }
         }
 
-        public void VerifyDynamicTextBlocks(Image<Gray, byte> previous, Image<Gray, byte> next,
+        public void VerifyDynamicTextBlocks(Image<Gray, byte> previousImage, Image<Gray, byte> nextImage,
             List<Image<Gray, byte>> textImageList, List<Rectangle> regionList)
         {
 
@@ -46,23 +46,27 @@ namespace CameraCapture
                 previousMotionVectorList = new List<MotionVector>();
                 nextMotionVectorList = new List<MotionVector>();
 
+                
                 FindMotionVector findMotionVector = new FindMotionVector();
-                findMotionVector.CalculateMotionVectorList(previous, textImageList[i], regionList[i], 15, 20, 1000);
+                findMotionVector.CalculateMotionVectorList(previousImage, textImageList[i], regionList[i], 15, 20, 3000);
                 previousMotionVectorList = findMotionVector.MotionVectorList;
 
-                findMotionVector.CalculateMotionVectorList(next, textImageList[i], regionList[i], 15, 20, 1000);
+                
+                findMotionVector.CalculateMotionVectorList(nextImage, textImageList[i], regionList[i], 15, 20, 3000);
                 nextMotionVectorList = findMotionVector.MotionVectorList;
+                
+                List<Point> splitPositionList = findMotionVector.SplitPositionList;
+                
 
-                List<Image<Gray, byte>> subImageList = findMotionVector.SubImageList;
-                List<Rectangle> subRegionList = findMotionVector.SubRegionList;
-
+                
+                
                 // compare two motion vector lists
                 // only keep the sub-block the same magnitude, and the contract direction
 
                 List<RunLength> runningList = new List<RunLength>();
                 int end = -1;
                 bool same = false;
-                for (int j = 0; j < previousMotionVectorList.Count-1; j++)
+                for (int j = 0; j < previousMotionVectorList.Count; j++)
                 {
 
                     if (((previousMotionVectorList[j].Direction == Direction.Left && nextMotionVectorList[j].Direction == Direction.Right)
@@ -82,17 +86,9 @@ namespace CameraCapture
                     {
                         if (end != -1 && same == true) // dang ton tai mot khoang chay giong nhau truoc do
                         {
-
-                            if (!(j+1 < previousMotionVectorList.Count - 1 && ((previousMotionVectorList[j+1].Direction == Direction.Left && nextMotionVectorList[j+1].Direction == Direction.Right)
-                        || ((previousMotionVectorList[j+1].Direction == Direction.Right && nextMotionVectorList[j+1].Direction == Direction.Left)))
-                        && Math.Abs(previousMotionVectorList[j+1].Magnitude + nextMotionVectorList[j+1].Magnitude) < 2))
-                            {
                                 runningList[runningList.Count - 1].End = end;
                                 end = -1;
                                 same = false;
-                            }
-                            
-
                         }
                     }
                 }
@@ -107,10 +103,10 @@ namespace CameraCapture
                         List<Image<Gray, byte>> refinedSubImageList = new List<Image<Gray, byte>>();
                         List<Rectangle> refinedSubRegionList = new List<Rectangle>();
                         MotionVector motionVector = new MotionVector();
+
+                        
                         for (int j = runLenth.Start; j <= runLenth.End; j++)
-                        {
-                            refinedSubImageList.Add(subImageList[j]);
-                            refinedSubRegionList.Add(subRegionList[j]);
+                        {                          
                             if ((previousMotionVectorList[j].Magnitude + nextMotionVectorList[j].Magnitude)==0)
                             {
                                 motionVector.Direction = nextMotionVectorList[j].Direction;
@@ -118,18 +114,23 @@ namespace CameraCapture
                             }
                         }
 
-                        Image<Gray, byte> dynamicImage = Utilities.ConcatenateSubImages(refinedSubImageList);
-                        Rectangle region = Utilities.ConcatenateSubRegion(refinedSubRegionList);
 
+                        Point upperLeftPoint = splitPositionList[runLenth.Start];
+                        Size size = new Size(splitPositionList[runLenth.End].X-splitPositionList[runLenth.Start].X, textImageList[i].Height);
+                        Rectangle rect = new Rectangle(upperLeftPoint, size );
+
+                        Image<Gray, byte> dynamicImage = textImageList[i].Copy(rect);                        
                         DynamicTextDescriber describer = new DynamicTextDescriber();
                         describer.MotionVector = motionVector;
                         describer.TextImage = dynamicImage;
-                        describer.XCenter = region.X + region.Width / 2;
-                        describer.YCenter = region.Y + region.Height / 2;
+                        describer.X = regionList[i].X + upperLeftPoint.X;
+                        describer.Y = regionList[i].Y + upperLeftPoint.Y;
                         refinedDynamicImageList.Add(describer);
                     }
                 }
+                
             }
+            
         }
 
         public class RunLength

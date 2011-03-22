@@ -172,7 +172,7 @@ namespace CameraCapture
                     // Apply this function on two sub-images
                     int height, width;
                     height = img.Height; width = img.Width;
-                    Rectangle rect1 = new Rectangle(new Point(0, 0), new Size(width, maxDevPos + 1));
+                    Rectangle rect1 = new Rectangle(new Point(0, 0), new Size(width, maxDevPos));
                     Rectangle rect2 = new Rectangle(new Point(0, maxDevPos), new Size(width, height - maxDevPos));
 
                     Image<Gray, byte> subImage1 = img.Copy(rect1); // sub-image region is above split position, original position is equal to 0

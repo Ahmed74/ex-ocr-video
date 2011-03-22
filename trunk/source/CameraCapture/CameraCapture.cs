@@ -23,7 +23,7 @@ namespace CameraCapture
         private ClassifyTextLines classifyTextLines;
         private RefineDynamicTextBlocks refineDynamicTextBlocks;
 
-        Image<Bgr, byte> prev, cur, next ;
+        Image<Gray, byte> prev, cur, next, grayTemp ;
         Image<Bgr, byte> temp; 
         
         public CameraCapture()
@@ -43,57 +43,58 @@ namespace CameraCapture
             //TestOtsuThresh(frame);
 
             temp = _capture.QueryFrame();
+            grayTemp = temp.Convert<Gray, byte>();//.SmoothMedian(3);
+            
             if (temp != null)
             {
 
                 int height, width;
                 height = temp.Height; width = temp.Width;
-                Rectangle rect = new Rectangle(new Point(0, (int)(0.75F * height)), new Size(width, (int)(0.25F * height)));
-
+                
+                //Rectangle rect = new Rectangle(new Point(0, (int)(0.75F * height)), new Size(width, (int)(0.25F * height)));
                 //previous = temp.Copy(rect);
                 //temp = _capture.QueryFrame();            
                 //previous = temp.Copy(rect);
                 //temp = _capture.QueryFrame();
                 //next = temp.Copy(rect);
+
                 if (prev == null)
                 {
-                    prev = temp.Copy();
+                    prev = grayTemp.Copy();
                     temp = _capture.QueryFrame();
+                    grayTemp = temp.Convert<Gray, byte>();//.SmoothMedian(3);
                 }
                 else prev = next.Copy();
-                cur = temp.Copy();
+                
+                cur = grayTemp.Copy();
                 temp = _capture.QueryFrame();
-                next = temp.Copy();
-
+                grayTemp = temp.Convert<Gray, byte>();//.SmoothMedian(3);
+                next = grayTemp.Copy();
+                
                 if (next != null)
                 {
-
-
-                    // Step 1: dectect candicate blocks and extract individual lines.
-                    cannyDetector.Canny(cur, 5, 5f, 20f);
-                    determineTextBlocks.DilateEdgeImage(cannyDetector.VerticalEdge, cannyDetector.HorizontalEdge);
-
                     captureImageBox.Image = cur;
-
+                    // Step 1: dectect candicate blocks and extract individual lines.
+                    cannyDetector.Canny(cur, 5, 5f, 15f);
+                    determineTextBlocks.DilateEdgeImage(cannyDetector.VerticalEdge, cannyDetector.HorizontalEdge);                    
                     determineTextBlocks.ExtractCandicateTextBlocks();
                     determineTextLines.ExtractTextLines(determineTextBlocks.CandicateTextBlocksImagesList, determineTextBlocks.CandicateTextRegionList);
 
 
-                    List<Image<Bgr, byte>> textImageList = new List<Image<Bgr, byte>>();
+                    
+                    List<Image<Gray, byte>> textImageList = new List<Image<Gray, byte>>();
+                    
                     textImageList = Utilities.CreateImageListsFromROIList(cur, determineTextLines.FilteredTextRegionList);
                     grayscaleImageBox.Image = Utilities.AttachTextBlocksOnImage(cur.Height, cur.Width,
                         textImageList, determineTextLines.FilteredTextRegionList);
 
+                    
+                    
 
-                    classifyTextLines.PreviousFrame = prev;
-                    classifyTextLines.CurrentFrame = cur;
-                    classifyTextLines.NextFrame = next;
-                    classifyTextLines.ClassfifyTextLines(determineTextLines.FilteredTextBlockImageList,
-                        determineTextLines.FilteredTextRegionList, 0.70F, 20F, 10F, 0.5F);
-
-                    // Liu's method is too sensitive to threshold
-                    //classifyTextLines.ClassfifyTextLines(determineTextLines.FilteredTextBlockImageList,
-                    //    determineTextLines.FilteredTextRegionList, 0.02F);
+                    classifyTextLines.ClassfifyTextLines(prev, cur, next, determineTextLines.FilteredTextBlockImageList,
+                        determineTextLines.FilteredTextRegionList, 0.90F, 20F, 10F, 0.5F);
+                    
+                    /*
 
                     List<Image<Gray, byte>> staticTextImageList, dynamicTextImageList;
                     staticTextImageList = new List<Image<Gray, byte>>();
@@ -102,23 +103,23 @@ namespace CameraCapture
                     dynamicTextImageList = Utilities.CreateImageListsFromROIList(cur.Convert<Gray, byte>(), classifyTextLines.DynamicTextRegionList);
 
                     Image<Gray, byte> staticTextImage, dynamicTextImage;
-                    //staticTextImage = Utilities.AttachTextBlocksOnImage(cur.Height, cur.Width, staticTextImageList, classifyTextLines.StaticTextRegionList);
+                    staticTextImage = Utilities.AttachTextBlocksOnImage(cur.Height, cur.Width, staticTextImageList, classifyTextLines.StaticTextRegionList);
                     dynamicTextImage = Utilities.AttachTextBlocksOnImage(cur.Height, cur.Width, dynamicTextImageList, classifyTextLines.DynamicTextRegionList);
 
-
-
                     verticalEdgeImageBox.Image = dynamicTextImage;
-
+                    horizontalEdgeImageBox.Image = staticTextImage;
+                    
+                    /*
                     refineDynamicTextBlocks.VerifyDynamicTextBlocks(prev.Convert<Gray, byte>(), next.Convert<Gray, byte>(),
-                       dynamicTextImageList, classifyTextLines.DynamicTextRegionList);
+                    dynamicTextImageList, classifyTextLines.DynamicTextRegionList);
 
                     List<Image<Gray, byte>> imageList = new List<Image<Gray, byte>>();
                     List<Rectangle> regionList = new List<Rectangle>();
                     for (int i = 0; i < refineDynamicTextBlocks.RefinedDynamicImageList.Count; i++)
                     {
                         imageList.Add(refineDynamicTextBlocks.RefinedDynamicImageList[i].TextImage);
-                        Rectangle rect1 = new Rectangle(new Point(refineDynamicTextBlocks.RefinedDynamicImageList[i].XCenter - refineDynamicTextBlocks.RefinedDynamicImageList[i].TextImage.Width/2,
-                            refineDynamicTextBlocks.RefinedDynamicImageList[i].YCenter - refineDynamicTextBlocks.RefinedDynamicImageList[i].TextImage.Height/2),
+                        Rectangle rect1 = new Rectangle(new Point(refineDynamicTextBlocks.RefinedDynamicImageList[i].X,
+                            refineDynamicTextBlocks.RefinedDynamicImageList[i].Y),
                             refineDynamicTextBlocks.RefinedDynamicImageList[i].TextImage.Size);
                         regionList.Add(rect1);
                     }
@@ -128,8 +129,8 @@ namespace CameraCapture
                         staticTextImage = Utilities.AttachTextBlocksOnImage(cur.Height, cur.Width, imageList, regionList);
                         horizontalEdgeImageBox.Image = staticTextImage;
                     }
-
-
+                    
+                    */
 
 
                     //List<Image<Gray,byte>> binaryImageList = classifyTextLines.BinarizeTextImageList(classifyTextLines.StaticTextRegionList);
@@ -171,54 +172,7 @@ namespace CameraCapture
 
         }
 
-        private void SubstractTwoConsecutiveFrames()
-        {
-            Image<Bgr, Byte> prev, current;
-            Image<Gray, byte> grayPrev, grayCur;
-            Image<Gray, byte> cannyPrev, cannyCur;
-            current = _capture.QueryFrame();
-
-            current = current.SmoothGaussian(5);
-            prev = current.Copy();
-            current = _capture.QueryFrame();
-            string path = "F:\\THAO\\Output\\Dau tu kinh te\\";
-            int count = 1;
-            while (true)
-            {
-                if (current != null)
-                {
-                    captureImageBox.Image = current;
-                    current = current.SmoothGaussian(5);
-
-                    grayPrev = prev.Convert<Gray, byte>();
-                    cannyPrev = grayPrev.Canny(new Gray(100), new Gray(60));
-
-                    grayCur = current.Convert<Gray, byte>();
-                    cannyCur = grayCur.Canny(new Gray(100), new Gray(60));
-
-                    Image<Gray, byte> diff = grayCur.Sub(grayPrev);
-                    string filename = path + "diff\\" + count.ToString() + ".jpg";
-                    diff.Save(filename);
-
-                    diff = cannyCur.Sub(cannyPrev);
-                    filename = path + "canny\\" + count.ToString() + ".jpg";
-                    diff.Save(filename);
-
-
-
-                    prev = current.Copy();
-                    current = _capture.QueryFrame();
-                    count++;
-                }
-                else
-                {
-                    MessageBox.Show("Meet a null image !!");
-                    break;
-                }
-
-            }
-        }
-
+        
         private void captureButtonClick(object sender, EventArgs e)
         {
             #region if capture is not created, create it now
@@ -226,8 +180,8 @@ namespace CameraCapture
             {
                 try
                 {
-                    //_capture = new Capture("F:\\THAO\\Ban tin dau tu kinh te.avi");
-                    _capture = new Capture("F:\\goc.avi");
+                    //_capture = new Capture("F:\\sample1.avi");
+                    _capture = new Capture(@"F:\THAO\Output\SampleVideos\sample2.avi");
                     //_capture = new Capture("F:\\THAO\\Ban tin tai chinh.avi");
                     
                 }
@@ -251,7 +205,6 @@ namespace CameraCapture
                     captureButton.Text = "Stop";
                     Application.Idle += ProcessFrame;
                 }
-
                 _captureInProgress = !_captureInProgress;
             }
         }

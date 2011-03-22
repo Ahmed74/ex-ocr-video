@@ -3,7 +3,7 @@
   <Class Name="CameraCapture.CameraCapture" Collapsed="true">
     <Position X="0.5" Y="0.5" Width="1.5" />
     <TypeIdentifier>
-      <HashCode>iCAIAABGACAADBAAoACBEAAiAAAAIQKQEABAQQKAAIg=</HashCode>
+      <HashCode>iCAIAABGACAADBAAoACBEAAiAAAAIQKQEABgQQKAAIg=</HashCode>
       <FileName>CameraCapture.cs</FileName>
     </TypeIdentifier>
   </Class>
@@ -45,10 +45,10 @@
       <FileName>Utilities.cs</FileName>
     </TypeIdentifier>
   </Class>
-  <Class Name="CameraCapture.ClassifyTextLines" Collapsed="true">
+  <Class Name="CameraCapture.ClassifyTextLines">
     <Position X="4" Y="0.5" Width="1.5" />
     <TypeIdentifier>
-      <HashCode>ADGEAACAhCAAgEAgAAAAIAgIAAAACAAADAAAAAAEAAA=</HashCode>
+      <HashCode>ADAEAACABCAAgEAAAAAAAAgAAAAAAAAABAAAAAAEAAA=</HashCode>
       <FileName>ClassifyTextLines.cs</FileName>
     </TypeIdentifier>
   </Class>
@@ -67,12 +67,12 @@
     </TypeIdentifier>
   </Class>
   <Class Name="CameraCapture.FindMotionVector" Collapsed="true">
-    <Position X="4" Y="1.5" Width="1.5" />
+    <Position X="8" Y="0.5" Width="1.5" />
     <Compartments>
       <Compartment Name="Fields" Collapsed="true" />
     </Compartments>
     <TypeIdentifier>
-      <HashCode>ABAgAAAAAAAAEAACACAAAAAAAAEAEAABgAAAAAAAAAA=</HashCode>
+      <HashCode>AAAgAAAAAAAAEAADACAAAAAAAAEAAAAAgAEAAAAAAAA=</HashCode>
       <FileName>CalculateMotionVector.cs</FileName>
     </TypeIdentifier>
   </Class>
@@ -83,17 +83,17 @@
       <FileName>OtsuThreshold.cs</FileName>
     </TypeIdentifier>
   </Class>
-  <Class Name="CameraCapture.TrackDynamicTextBlock">
-    <Position X="4" Y="2.5" Width="1.5" />
+  <Class Name="CameraCapture.TrackDynamicTextBlock" Collapsed="true">
+    <Position X="1.5" Y="4.25" Width="1.5" />
     <TypeIdentifier>
-      <HashCode>AAAAACAAAAAAAAIAAAAAAAAAAAEBAIAAAUEAAAAAAAA=</HashCode>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAEBAAAAAQEAAAAAAAA=</HashCode>
       <FileName>TrackDynamicTextBlock.cs</FileName>
     </TypeIdentifier>
   </Class>
   <Class Name="CameraCapture.DynamicTextDescriber">
     <Position X="9" Y="2" Width="1.5" />
     <TypeIdentifier>
-      <HashCode>YAAAAGAAAAAAAAAAAAAAAABEAAAABAAAAAAAAABAAAA=</HashCode>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAABEAAAABAAAAABgAABAYAA=</HashCode>
       <FileName>DynamicDescriber.cs</FileName>
     </TypeIdentifier>
   </Class>
